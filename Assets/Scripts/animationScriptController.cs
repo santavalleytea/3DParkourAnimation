@@ -8,10 +8,14 @@ public class NewBehaviourScript : MonoBehaviour {
     int isJoggingHash;
     int isRunningHash;
     int jumpHash;
+    int runSlideHash;
 
     public float joggingSpeed = 5.0f;
     public float runningSpeed = 7.0f;
     public float turnSpeed = 200f;
+
+    private bool isSliding = false;
+    public float slideTimer = 0.0f;
 
     void Start() {
         animator = GetComponent<Animator>();
@@ -20,12 +24,14 @@ public class NewBehaviourScript : MonoBehaviour {
         isJoggingHash = Animator.StringToHash("isJogging");
         isRunningHash = Animator.StringToHash("isRunning");
         jumpHash = Animator.StringToHash("Jump");
+        runSlideHash = Animator.StringToHash("runSlide");
     }
 
     void Update() {
         bool isJogging = animator.GetBool("isJogging");
         bool isRunning = animator.GetBool("isRunning");
         bool Jump = animator.GetBool("Jump");
+        bool runSlide = animator.GetBool("runSlide");
 
         bool forwardKey = Input.GetKey(KeyCode.W);
         bool rightKey = Input.GetKey(KeyCode.D);
@@ -33,6 +39,9 @@ public class NewBehaviourScript : MonoBehaviour {
         bool downKey = Input.GetKey(KeyCode.S);
         bool runningKey = Input.GetKey(KeyCode.LeftShift);
         bool jumpKey = Input.GetKey(KeyCode.Space);
+        bool slideKey = Input.GetKey(KeyCode.E);
+
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
 
         if (!isJogging && (forwardKey || rightKey || leftKey || downKey)) {
             animator.SetBool(isJoggingHash, true);
@@ -55,50 +64,66 @@ public class NewBehaviourScript : MonoBehaviour {
             animator.SetBool(isRunningHash, false);
         }
 
-        if (forwardKey || rightKey || leftKey || downKey) {
-            float speed = isRunning ? runningSpeed : joggingSpeed;
+        if (isSliding) {
+            transform.Translate(Vector3.forward * runningSpeed * Time.deltaTime);
 
-            Vector3 moveDirection = Vector3.zero;
+            slideTimer -= Time.deltaTime;
 
-            if (forwardKey) {
-                moveDirection += Vector3.forward;
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 0, 0), speed * Time.deltaTime);
-                //transform.Translate(transform.forward * speed * Time.deltaTime, Space.World);
+            if (slideTimer <= 0f) {
+                isSliding = false;
+                animator.SetBool(runSlideHash, false);
+            }
+        } else { 
+            if (forwardKey || rightKey || leftKey || downKey) {
+
+                float speed = isRunning ? runningSpeed : joggingSpeed;
+
+                Vector3 moveDirection = Vector3.zero;
+
+                if (forwardKey) {
+                    moveDirection += Vector3.forward;
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 0, 0), speed * Time.deltaTime);
+                }
+
+                if (rightKey) {
+                    moveDirection += Vector3.right;
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 90, 0), speed * Time.deltaTime);
+                }
+
+                if (leftKey) {
+                    moveDirection += Vector3.left;
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, -90, 0), speed * Time.deltaTime);
+                }
+
+                if (downKey) {
+                    moveDirection += Vector3.back;
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 180, 0), speed * Time.deltaTime);
+                }
+
+                if (moveDirection.magnitude > 1f) {
+                    moveDirection.Normalize();
+                }
+
+                transform.Translate(moveDirection * speed * Time.deltaTime, Space.World);
             }
 
-            if (rightKey) {
-                moveDirection += Vector3.right;
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 90, 0), speed * Time.deltaTime);
-                //transform.Translate(transform.forward * speed * Time.deltaTime, Space.World);
-            }
-
-            if (leftKey) {
-                moveDirection += Vector3.left;
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, -90, 0), speed * Time.deltaTime);
-                //transform.Translate(transform.forward * speed * Time.deltaTime, Space.World);
-            }
-
-            if (downKey) {
-                moveDirection += Vector3.back;
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 180, 0), speed * Time.deltaTime);
-                //transform.Translate(transform.forward * speed * Time.deltaTime, Space.World);
-            }
-
-            if (moveDirection.magnitude > 1f) {
-                moveDirection.Normalize();
-            }
-
-            transform.Translate(moveDirection * speed * Time.deltaTime, Space.World);
         }
-
+       
         if (jumpKey) {
             animator.SetBool(jumpHash, true);
         }
 
-        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Jump") &&
-            animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f) {
+        if (stateInfo.IsName("Jump") && stateInfo.normalizedTime >= 1.0f) {
             // Reset jump once animation ends
             animator.SetBool(jumpHash, false);
         }
+
+        if (isRunning && slideKey && !isSliding) {
+            isSliding = true;
+            animator.SetBool(runSlideHash, true);
+            slideTimer = 1.0f;
+
+            //animator.applyRootMotion = true;
+        }        
     }
 }
