@@ -11,6 +11,8 @@ public class NewBehaviourScript : MonoBehaviour {
     int isRunningHash;
     int jumpHash;
     int runSlideHash;
+    int wallRunHash;
+    int isFallingHash;
 
     public float joggingSpeed = 5.0f;
     public float runningSpeed = 7.0f;
@@ -18,6 +20,9 @@ public class NewBehaviourScript : MonoBehaviour {
 
     private bool isSliding = false;
     public float slideTimer = 0.0f;
+
+    public LayerMask wallLayer;
+    public float wallDetectionDistance = 2.0f;
 
     void Start() {
         animator = GetComponent<Animator>();
@@ -27,6 +32,8 @@ public class NewBehaviourScript : MonoBehaviour {
         isRunningHash = Animator.StringToHash("isRunning");
         jumpHash = Animator.StringToHash("Jump");
         runSlideHash = Animator.StringToHash("runSlide");
+        wallRunHash = Animator.StringToHash("isWallRunning");
+        isFallingHash = Animator.StringToHash("isFalling");
     }
 
     void Update() {
@@ -34,6 +41,8 @@ public class NewBehaviourScript : MonoBehaviour {
         bool isRunning = animator.GetBool("isRunning");
         bool Jump = animator.GetBool("Jump");
         bool runSlide = animator.GetBool("runSlide");
+        bool wallRun = animator.GetBool("isWallRunning");
+        bool falling = animator.GetBool("isFalling");
 
         bool forwardKey = Input.GetKey(KeyCode.W);
         bool rightKey = Input.GetKey(KeyCode.D);
@@ -108,6 +117,33 @@ public class NewBehaviourScript : MonoBehaviour {
             isSliding = true;
             animator.SetBool(runSlideHash, true);
             slideTimer = 1.0f;
-        }        
+        }     
+        
+        if (isRunning && IsNearWall()) {
+            Debug.Log("Ready to wall run");
+            animator.SetBool(wallRunHash, true);
+        } else {
+            animator.SetBool(wallRunHash, false);
+            animator.SetBool(isFallingHash, true);
+        }
+
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Falling") &&
+            animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f) {
+            Debug.Log("Falling finished");
+            animator.SetBool(isFallingHash, false); 
+        }
+    }
+
+    private bool IsNearWall() {
+        RaycastHit hit;
+        Vector3 rayDirection = transform.right;
+
+        // Detects wall
+        if (Physics.Raycast(transform.position, rayDirection, out hit, wallDetectionDistance, wallLayer)) {
+            Debug.Log("Wall Detected");
+            return true;
+        }
+
+        return false;
     }
 }
