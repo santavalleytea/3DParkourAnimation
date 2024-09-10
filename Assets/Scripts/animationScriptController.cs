@@ -5,6 +5,8 @@ using UnityEngine;
 public class NewBehaviourScript : MonoBehaviour {
     Animator animator;
 
+    public Transform cameraTransform;
+
     int isJoggingHash;
     int isRunningHash;
     int jumpHash;
@@ -47,13 +49,13 @@ public class NewBehaviourScript : MonoBehaviour {
             animator.SetBool(isJoggingHash, true);
         }
 
-        // Stop moving
+        //Stop moving
         if (isJogging && !(forwardKey || rightKey || leftKey || downKey)) {
             animator.SetBool(isRunningHash, false);
             animator.SetBool(isJoggingHash, false);
         }
 
-        // Running
+        //Running
         if (!isRunning && ((forwardKey || rightKey || leftKey || downKey) && runningKey)) {
             animator.SetBool(isRunningHash, true);
             transform.Translate(Vector3.forward * runningSpeed * Time.deltaTime);
@@ -65,6 +67,7 @@ public class NewBehaviourScript : MonoBehaviour {
         }
 
         if (isSliding) {
+            // Translation of player when sliding
             transform.Translate(Vector3.forward * runningSpeed * Time.deltaTime);
 
             slideTimer -= Time.deltaTime;
@@ -73,40 +76,23 @@ public class NewBehaviourScript : MonoBehaviour {
                 isSliding = false;
                 animator.SetBool(runSlideHash, false);
             }
-        } else { 
-            if (forwardKey || rightKey || leftKey || downKey) {
+        } else {
+            // Normalized input
+            Vector3 inputDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
 
-                float speed = isRunning ? runningSpeed : joggingSpeed;
+            if (inputDirection.magnitude >= 0.1f) {
+                // Calculate target angle based on camera direction
+                float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
 
-                Vector3 moveDirection = Vector3.zero;
+                // Smooth player rotation
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSpeed, 0.1f);
+                transform.rotation = Quaternion.Euler(0, angle, 0);
 
-                if (forwardKey) {
-                    moveDirection += Vector3.forward;
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 0, 0), speed * Time.deltaTime);
-                }
-
-                if (rightKey) {
-                    moveDirection += Vector3.right;
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 90, 0), speed * Time.deltaTime);
-                }
-
-                if (leftKey) {
-                    moveDirection += Vector3.left;
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, -90, 0), speed * Time.deltaTime);
-                }
-
-                if (downKey) {
-                    moveDirection += Vector3.back;
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 180, 0), speed * Time.deltaTime);
-                }
-
-                if (moveDirection.magnitude > 1f) {
-                    moveDirection.Normalize();
-                }
-
-                transform.Translate(moveDirection * speed * Time.deltaTime, Space.World);
+                // Move in direction relative to camera
+                Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+                float speed = runningKey ? runningSpeed : joggingSpeed;
+                transform.Translate(moveDir * speed * Time.deltaTime, Space.World);
             }
-
         }
        
         if (jumpKey) {
@@ -122,8 +108,6 @@ public class NewBehaviourScript : MonoBehaviour {
             isSliding = true;
             animator.SetBool(runSlideHash, true);
             slideTimer = 1.0f;
-
-            //animator.applyRootMotion = true;
         }        
     }
 }
