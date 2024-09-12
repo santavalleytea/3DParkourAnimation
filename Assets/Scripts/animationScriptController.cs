@@ -13,6 +13,7 @@ public class NewBehaviourScript : MonoBehaviour {
     int runSlideHash;
     int wallRunHash;
     int isFallingHash;
+    int isJumpRollHash;
 
     public float joggingSpeed = 5.0f;
     public float runningSpeed = 7.0f;
@@ -20,6 +21,8 @@ public class NewBehaviourScript : MonoBehaviour {
 
     private bool isSliding = false;
     public float slideTimer = 0.0f;
+    private bool isJumpRolling = false;
+    public float rollTimer = 0.0f;
 
     public LayerMask wallLayer;
     public float wallDetectionDistance = 2.0f;
@@ -34,6 +37,7 @@ public class NewBehaviourScript : MonoBehaviour {
         runSlideHash = Animator.StringToHash("runSlide");
         wallRunHash = Animator.StringToHash("isWallRunning");
         isFallingHash = Animator.StringToHash("isFalling");
+        isJumpRollHash = Animator.StringToHash("isJumpRoll");
     }
 
     void Update() {
@@ -43,6 +47,7 @@ public class NewBehaviourScript : MonoBehaviour {
         bool runSlide = animator.GetBool("runSlide");
         bool wallRun = animator.GetBool("isWallRunning");
         bool falling = animator.GetBool("isFalling");
+        bool jumpRoll = animator.GetBool("isJumpRoll");
 
         bool forwardKey = Input.GetKey(KeyCode.W);
         bool rightKey = Input.GetKey(KeyCode.D);
@@ -51,6 +56,7 @@ public class NewBehaviourScript : MonoBehaviour {
         bool runningKey = Input.GetKey(KeyCode.LeftShift);
         bool jumpKey = Input.GetKey(KeyCode.Space);
         bool slideKey = Input.GetKey(KeyCode.E);
+        bool jumpRollKey = Input.GetKey(KeyCode.Q);
 
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
 
@@ -120,17 +126,38 @@ public class NewBehaviourScript : MonoBehaviour {
         }     
         
         if (isRunning && IsNearWall()) {
-            Debug.Log("Ready to wall run");
+            //Debug.Log("Ready to wall run");
             animator.SetBool(wallRunHash, true);
         } else {
             animator.SetBool(wallRunHash, false);
             animator.SetBool(isFallingHash, true);
         }
 
-        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Falling") &&
-            animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f) {
-            Debug.Log("Falling finished");
+        if (stateInfo.IsName("Falling") &&
+            stateInfo.normalizedTime >= 1.0f) {
+            //Debug.Log("Falling finished");
             animator.SetBool(isFallingHash, false); 
+        }
+
+        if (!jumpRoll && jumpRollKey) {
+            isJumpRolling = true;
+            animator.SetBool(isJumpRollHash, true);
+            animator.applyRootMotion = false;
+        }
+
+        if (stateInfo.IsName("JumpRoll") && stateInfo.normalizedTime >= 1.0f) {
+            animator.SetBool(isJumpRollHash, false);
+            isJumpRolling = false;
+
+            float yOffSet = 0.04f;
+            transform.position = new Vector3(transform.position.x, transform.position.y - yOffSet, transform.position.z);
+
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 2f)) {
+                transform.position = new Vector3(transform.position.x, hit.point.y, transform.position.z);
+            }
+
+            animator.applyRootMotion = true;
         }
     }
 
