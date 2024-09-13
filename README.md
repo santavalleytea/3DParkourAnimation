@@ -36,8 +36,8 @@ Inspired by the gameplay of games that utilizes parkour animations such as Assas
 - Collisions ensured better interactiosn with walls and obstacles.
 - Utilized compound colliders for the players due to its complex model.
 
-## Screenshots
-![img](./Screenshots/scene.png)
+## Demo
+[![Demo](https://img.youtube.com/vi/Ed4us4pPDx0/0.jpg)](https://youtu.be/Ed4us4pPDx0)
 
 ## License
 
