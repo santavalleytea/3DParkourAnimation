@@ -16,6 +16,7 @@ Inspired by the gameplay of games that utilizes parkour animations such as Assas
 ### 1. Animator Controller
 - Managed the animation states for all player mechanics.
 - Transitions between different movements based on player input.
+![img](./Screenshots/animator.png)
 
 ### 2. C# Scripting and Animation Control
 - Scripting allowed for more dynamic and manual changes to the animation states. 
@@ -35,7 +36,8 @@ Inspired by the gameplay of games that utilizes parkour animations such as Assas
 - Collisions ensured better interactiosn with walls and obstacles.
 - Utilized compound colliders for the players due to its complex model.
 
-## Video
+## Screenshots
+![img](./Screenshots/scene.png)
 
 ## License
 
