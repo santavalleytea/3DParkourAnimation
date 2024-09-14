@@ -31,7 +31,7 @@ Inspired by the gameplay of games that utilizes parkour animations such as Assas
 - Implemented raycasting to detect walls and obstacles in front of the player. Used mainly for wall-running and jump rolls.
 - Prevented player from floating after animations that creates displacement along the y-axis.
 
-### 5. Rigibody and Collisions
+### 5. Rigidbody and Collisions
 - Using `Rigidbody` for physics-based actions.
 - Collisions ensured better interactiosn with walls and obstacles.
 - Utilized compound colliders for the players due to its complex model.
